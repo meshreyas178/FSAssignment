@@ -1,0 +1,141 @@
+Admin API Functions
+
+1)Create User
+
+def create_user(username, password, is_admin=False):
+    """Create a new user in the database."""
+    new_user = User(username=username, password=password, is_admin=is_admin)
+    db.session.add(new_user)
+    db.session.commit()
+    return {"message": "User created"}, 201
+
+2)Edit User
+
+def edit_user(user_id, username=None, password=None, is_admin=None):
+    """Edit an existing user’s details."""
+    user = User.query.get(user_id)
+    if username:
+        user.username = username
+    if password:
+        user.password = password
+    if is_admin is not None:
+        user.is_admin = is_admin
+    db.session.commit()
+    return {"message": "User updated"}, 200
+
+
+Authentication Functions
+
+3)Login
+
+def login_user(username, password):
+    """Authenticate a user and log them in."""
+    user = User.query.filter_by(username=username, password=password).first()
+    if user:
+        login_user(user)
+        return {"message": "Logged in"}, 200
+    return {"message": "Invalid credentials"}, 401
+
+4)Logout
+
+def logout_user():
+    """Log the current user out."""
+    logout_user()
+    return {"message": "Logged out"}, 200
+
+Group Management Functions
+
+Create Group
+
+def create_group(name):
+    """Create a new group."""
+    new_group = Group(name=name)
+    db.session.add(new_group)
+    db.session.commit()
+    return {"message": "Group created"}, 201
+
+Delete Group
+
+def delete_group(group_id):
+    """Delete an existing group."""
+    group = Group.query.get(group_id)
+    if group:
+        db.session.delete(group)
+        db.session.commit()
+        return {"message": "Group deleted"}, 200
+    return {"message": "Group not found"}, 404
+
+Add Member to Group
+
+def add_member_to_group(group_id, user_id):
+    """Add a user to a group."""
+    group = Group.query.get(group_id)
+    user = User.query.get(user_id)
+    if group and user:
+        group.members.append(user)
+        db.session.commit()
+        return {"message": "Member added"}, 200
+    return {"message": "Group or user not found"}, 404
+
+5. Group Message Functions
+
+Send Message
+
+def send_message(group_id, sender_id, content):
+    """Send a message to a group."""
+    new_message = Message(content=content, group_id=group_id, sender_id=sender_id)
+    db.session.add(new_message)
+    db.session.commit()
+    return {"message": "Message sent"}, 201
+
+
+def like_message(message_id, user_id):
+    """Like a message."""
+    message = Message.query.get(message_id)
+    if message:
+        # Assuming you have a way to record likes, e.g., a `likes` relationship or table
+        # Increment like count or record the like
+        return {"message": "Message liked"}, 200
+    return {"message": "Message not found"}, 404
+
+
+End-to-End Functional Tests
+Test User Creation
+
+def test_create_user(client):
+    response = client.post('/create_user', json={
+        'username': 'testuser',
+        'password': 'testpass',
+        'is_admin': False
+    })
+    assert response.status_code == 201
+    assert b'User created' in response.data
+
+Test Login
+
+def test_login_user(client):
+    response = client.post('/login', json={
+        'username': 'testuser',
+        'password': 'testpass'
+    })
+    assert response.status_code == 200
+    assert b'Logged in' in response.data
+
+Test Group Creation
+
+def test_create_group(client):
+    response = client.post('/create_group', json={
+        'name': 'testgroup'
+    })
+    assert response.status_code == 201
+    assert b'Group created' in response.data
+
+Test Send Message
+
+def test_send_message(client):
+    response = client.post('/send_message', json={
+        'content': 'Hello, World!',
+        'group_id': 1
+    })
+    assert response.status_code == 201
+    assert b'Message sent' in response.data
